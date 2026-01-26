@@ -1,0 +1,33 @@
+table {
+    border-collapse: collapse;
+    font-family: sans-serif;
+    position: relative;
+}
+
+th, td {
+    border: 1px solid #ccc;
+    padding: 4px 8px;
+    text-align: center;
+    vertical-align: middle;
+    word-break: break-word;
+    overflow: hidden;
+}
+
+th {
+    white-space: pre-line;
+    position: sticky;
+    top: 0;
+    background: #f8f8f8;
+    z-index: 2;
+}
+
+td.editable {
+    background: #eaffff;
+    cursor: pointer;
+}
+
+.good { background: #a0f3a0; }
+.bad { background: #f7afaf; }
+.really-good { background: #75d847; }
+.really-bad { background: #ef7061; }
+.tie { background: #75e8f5; }

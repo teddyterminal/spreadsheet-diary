@@ -9,7 +9,7 @@ CSV_PATH = "ratings.csv"
 
 app = FastAPI()
 # Serve static files under /static so API routes are not shadowed.
-app.mount("/static", StaticFiles(directory=".", html=True), name="static")
+app.mount("/static", StaticFiles(directory="static", html=True), name="static")
 
 
 @app.get("/")
