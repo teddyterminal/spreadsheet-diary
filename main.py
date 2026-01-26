@@ -49,9 +49,12 @@ def compute(df):
     df["MD"] = df["Rating"] - df["Rating"].shift(30)
     df["YD"] = df["Rating"] - df["Rating"].shift(365)
 
+    df["avg_year_upto"] = df["Rating"].shift(1).rolling(365, min_periods=1).mean()
+
     # Placeholder entropy functions
-    df["entropy"] = 0.0
-    df["avg_entropy"] = 0.0
+    df["entropy"] = abs(df["diff"]) / (4.5 + (
+        df["Rating"].shift(1) + df["YD"] - df["avg_year_upto"]) / 200)
+    df["avg_entropy"] = df["entropy"].rolling(90, min_periods=1).mean()
 
     # Wins / 30
     def win_score(x):
@@ -83,15 +86,15 @@ def compute(df):
             current = current - 1 if current < 0 else -1
         else:
             current = 0
-        streak.append(current)
+        streak.append(abs(current))
     df["streak"] = streak
 
     # Record flag
     df["record"] = df["Rating"] == df["Rating"].cummax()
 
     df["+/-"] = df["diff"]
-    df["ENT"] = df["entropy"]
-    df["ENT90"] = df["avg_entropy"]
+    df["ENT"] = df["entropy"].round(3)
+    df["ENT90"] = df["avg_entropy"].round(3)
     df["YTD\nW"] = df["YTD W"]
     df["YTD\nL"] = df["YTD L"]
     df["YTD\nT"] = df["YTD T"]
