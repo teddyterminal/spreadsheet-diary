@@ -1,64 +1,152 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <style>
-    table { border-collapse: collapse; font-family: sans-serif; }
-    th, td { border: 1px solid #ccc; padding: 4px 8px; }
-    td.editable { background: #eaffff; cursor: pointer; }
-    .record { background: #c8ffd0; }
+    table {
+      border-collapse: collapse;
+      font-family: sans-serif;
+      position: relative;
+    }
+
+    th,
+    td {
+      border: 1px solid #ccc;
+      padding: 4px 8px;
+      text-align: center;
+      vertical-align: middle;
+      word-break: break-word;
+      overflow: hidden;
+    }
+    th {
+      white-space: pre-line;
+    }
+    th {
+      position: sticky;
+      top: 0;
+      background: #f8f8f8;
+      z-index: 2;
+    }
+
+    td.editable {
+      background: #eaffff;
+      cursor: pointer;
+    }
+
+    .good {
+      background: #a0f3a0;
+    }
+
+    .bad {
+      background: #f7afaf;
+    }
+
+    .really-good {
+      background: #75d847;
+    }
+
+    .really-bad {
+      background: #d03c3c;
+    }
+
+    .tie {
+      background: #75e8f5;
+    }
   </style>
+
 </head>
+
 <body>
   <button onclick="undo()">Undo</button>
   <table id="table"></table>
 
-<script>
-async function load() {
-  const res = await fetch("/data");
-  const rows = await res.json();
-  console.log("HELLO");
-  const table = document.getElementById("table");
-  table.innerHTML = "";
+  <script>
+    async function load() {
+      const res = await fetch("/data");
+      const rows = await res.json();
+      const table = document.getElementById("table");
+      table.innerHTML = "";
 
-  const headers = Object.keys(rows[0]);
-  table.insertAdjacentHTML("beforeend",
-    "<tr>" + headers.map(h => `<th>${h}</th>`).join("") + "</tr>");
+      const headers = Object.keys(rows[0]);
+      table.insertAdjacentHTML("beforeend",
+        "<tr>" + headers.map(h => `<th>${h}</th>`).join("") + "</tr>");
 
-  rows.forEach((row, i) => {
-    const tr = document.createElement("tr");
-    if (row.record) tr.classList.add("record");
+      rows.forEach((row, i) => {
+        const tr = document.createElement("tr");
 
-    headers.forEach(h => {
-      const td = document.createElement("td");
-      td.textContent = row[h];
+        headers.forEach(h => {
+          const td = document.createElement("td");
+          td.textContent = row[h];
 
-      if (h === "diff") {
-        td.classList.add("editable");
-        td.contentEditable = true;
+          // Add coloring class based on column and value
+          const value = row[h];
+          let cls = null;
+          if (typeof value === 'number' || !isNaN(parseFloat(value))) {
+            const num = parseFloat(value);
+            if (h === '+/-') {
+              if (num >= 5) cls = 'really-good';
+              else if (num >= 1) cls = 'good';
+              else if (num === 0) cls = 'tie';
+              else if (num >= -4) cls = 'bad';
+              else cls = 'really-bad';
+            } else if (h === 'WD') {
+              if (num >= 35) cls = 'really-good';
+              else if (num >= 1) cls = 'good';
+              else if (num === 0) cls = 'tie';
+              else if (num >= -34) cls = 'bad';
+              else cls = 'really-bad';
+            } else if (h === 'MD') {
+              if (num >= 150) cls = 'really-good';
+              else if (num >= 1) cls = 'good';
+              else if (num === 0) cls = 'tie';
+              else if (num >= -149) cls = 'bad';
+              else cls = 'really-bad';
+            } else if (h === 'YD') {
+              if (num > 0) cls = 'good';
+              else if (num < 0) cls = 'bad';
+              else cls = 'tie';
+            } else if (h === 'ENT' || h === 'ENT90') {
+              cls = num < 0.5 ? 'good' : 'bad';
+            } else if (h === 'L30W') {
+              if (num >= 20) cls = 'really-good';
+              else if (num <= 10) cls = 'really-bad';
+              else if (num > 15) cls = 'good';
+              else if (num === 15) cls = 'tie';
+              else cls = 'bad';
+            }
+          } else if (h === 'REC?' && value === "✓") {
+            cls = 'really-good';
+          }
+          if (cls) td.classList.add(cls);
 
-        td.onblur = async () => {
-          await fetch("/edit", {
-            method: "POST",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({ row: i, diff: parseFloat(td.textContent) })
-          });
-          load();
-        };
-      }
+          if (h === "diff") {
+            td.classList.add("editable");
+            td.contentEditable = true;
 
-      tr.appendChild(td);
-    });
+            td.onblur = async () => {
+              await fetch("/edit", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ row: i, diff: parseFloat(td.textContent) })
+              });
+              load();
+            };
+          }
 
-    table.appendChild(tr);
-  });
-}
+          tr.appendChild(td);
+        });
 
-async function undo() {
-  await fetch("/undo", { method: "POST" });
-  load();
-}
+        table.appendChild(tr);
+      });
+    }
 
-load();
-</script>
+    async function undo() {
+      await fetch("/undo", { method: "POST" });
+      load();
+    }
+
+    load();
+  </script>
 </body>
+
 </html>
