@@ -22,9 +22,10 @@ th {
 }
 
 td.editable {
-    background: #eaffff;
     cursor: pointer;
 }
+
+td.editable:focus { background: #eaffff; }
 
 .good { background: #a0f3a0; }
 .bad { background: #f7afaf; }
