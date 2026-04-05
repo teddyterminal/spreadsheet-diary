@@ -1,36 +1,9 @@
 from enum import Enum
 import pandas as pd
+from services.utils import SpecialDay, Momentum, Mark, mark_mapping, \
+    SUPERB_TERRIBLE_THRESHOLD, MEMORABLE_DEVASTATING_THRESHOLD, LEGENDARY_CATACLYSMIC_THRESHOLD
 
 START_RATING = 245
-
-class SpecialDay(Enum):
-    NONE = 0
-    SUPERB = 1
-    TERRIBLE = 2
-    MEMORABLE = 3
-    DEVASTATING = 4
-    LEGENDARY = 5
-    CATACLYSMIC = 6
-
-class Momentum(Enum):
-    NONE = 0
-    EXPECTED = 1
-    UNEXPECTED = 2
-
-class Mark(Enum):
-    NONE = ""
-    SWISH = "Swish"
-    PENNANT = "Pennant"
-    CHAMPIONSHIP = "Championship"
-    BINGO = "Bingo"
-    LOTTERY = "Lottery"
-    ROYAL_FLUSH = "Royal Flush"
-    RAIN = "Rain"
-    DOWNPOUR = "Downpour"
-    HURRICANE = "Hurricane"
-    BOMB = "Bomb"
-    NUKE = "Nuke"
-    H_BOMB = "H-Bomb"
 
 class RatingsService:
 
@@ -64,6 +37,37 @@ class RatingsService:
             return "rd"
         else:
             return "th"
+
+    def calculate_special_day(self, diff: float, last_30_wins: int) -> tuple[SpecialDay, Momentum, Mark]:
+        special_day = None
+        momentum = None
+        mark = None
+
+        if diff >= SUPERB_TERRIBLE_THRESHOLD:
+            special_day = SpecialDay.SUPERB
+        elif diff <= -SUPERB_TERRIBLE_THRESHOLD:
+            special_day = SpecialDay.TERRIBLE
+
+        if diff >= MEMORABLE_DEVASTATING_THRESHOLD:
+            special_day = SpecialDay.MEMORABLE
+        elif diff <= -MEMORABLE_DEVASTATING_THRESHOLD:
+            special_day = SpecialDay.DEVASTATING
+
+        if diff >= LEGENDARY_CATACLYSMIC_THRESHOLD:
+            special_day = SpecialDay.LEGENDARY
+        elif diff <= -LEGENDARY_CATACLYSMIC_THRESHOLD:
+            special_day = SpecialDay.CATACLYSMIC
+
+        if special_day:
+            if (diff >= SUPERB_TERRIBLE_THRESHOLD and last_30_wins >= 15) or \
+                    (diff <= -SUPERB_TERRIBLE_THRESHOLD and last_30_wins <= 15):
+                momentum = Momentum.EXPECTED
+            else:
+                momentum = Momentum.UNEXPECTED
+
+            mark = mark_mapping[special_day, momentum]
+
+        return special_day, momentum, mark
 
     def decorate_df_columns(self) -> pd.DataFrame:
         df = self.df.copy()
@@ -120,107 +124,83 @@ class RatingsService:
         df["record"] = df["rating"] == df["rating"].cummax()
         df["record"] = df["record"].apply(lambda x: "✓" if x else "")
 
-        # --- New Columns ---
-        # 1. Superb/Terrible
         superb_count = 0
         terrible_count = 0
-        superb_terrible_col = []
-        for d in df["diff"]:
-            if d >= 5:
-                superb_count += 1
-                superb_terrible_col.append(f"{superb_count}{self._ordinal_suffix(superb_count)} Superb")
-            elif d <= -5:
-                terrible_count += 1
-                superb_terrible_col.append(f"{terrible_count}{self._ordinal_suffix(terrible_count)} Terrible")
-            else:
-                superb_terrible_col.append("")
-        df["superb"] = superb_terrible_col
-
-        # 2. Memorable/Devastating
         memorable_count = 0
         devastating_count = 0
-        memorable_devastating_col = []
-        for d in df["diff"]:
-            if d >= 10:
-                memorable_count += 1
-                memorable_devastating_col.append(f"{memorable_count}{self._ordinal_suffix(memorable_count)} Memorable")
-            elif d <= -10:
-                devastating_count += 1
-                memorable_devastating_col.append(f"{devastating_count}{self._ordinal_suffix(devastating_count)} Devastating")
-            else:
-                memorable_devastating_col.append("")
-        df["memorable"] = memorable_devastating_col
-
-        # 3. Legendary/Cataclysmic
         legendary_count = 0
         cataclysmic_count = 0
-        legendary_cataclysmic_col = []
-        for d in df["diff"]:
-            if d >= 20:
-                legendary_count += 1
-                legendary_cataclysmic_col.append(f"{legendary_count}{self._ordinal_suffix(legendary_count)} Legendary")
-            elif d <= -20:
-                cataclysmic_count += 1
-                legendary_cataclysmic_col.append(f"{cataclysmic_count}{self._ordinal_suffix(cataclysmic_count)} Cataclysmic")
-            else:
-                legendary_cataclysmic_col.append("")
-        df["legendary"] = legendary_cataclysmic_col
 
-        # 4. Momentum
-        momentum_col = []
-        for i, d in enumerate(df["diff"]):
-            l30w = df["last_30_wins"].iloc[i] if "last_30_wins" in df else 0
-            special = None
-            if d >= 5:
-                special = 1
-            elif d <= -5:
-                special = -1
-            if special:
-                if (d >= 5 and l30w >= 15) or (d <= -5 and l30w <= 15):
-                    momentum_col.append(Momentum.EXPECTED.name)
-                else:
-                    momentum_col.append(Momentum.UNEXPECTED.name)
-            else:
-                momentum_col.append("")
-        df["momentum"] = momentum_col
-
-        # 5. Mark
-        mark_map = {
-            ("Superb", "EXPECTED"): Mark.SWISH.value,
-            ("Memorable", "EXPECTED"): Mark.PENNANT.value,
-            ("Legendary", "EXPECTED"): Mark.CHAMPIONSHIP.value,
-            ("Superb", "UNEXPECTED"): Mark.BINGO.value,
-            ("Memorable", "UNEXPECTED"): Mark.LOTTERY.value,
-            ("Legendary", "UNEXPECTED"): Mark.ROYAL_FLUSH.value,
-            ("Terrible", "EXPECTED"): Mark.RAIN.value,
-            ("Devastating", "EXPECTED"): Mark.DOWNPOUR.value,
-            ("Cataclysmic", "EXPECTED"): Mark.HURRICANE.value,
-            ("Terrible", "UNEXPECTED"): Mark.BOMB.value,
-            ("Devastating", "UNEXPECTED"): Mark.NUKE.value,
-            ("Cataclysmic", "UNEXPECTED"): Mark.H_BOMB.value,
+        mark_counts = {
+            Mark.SWISH: 0,
+            Mark.PENNANT: 0,
+            Mark.CHAMPIONSHIP: 0,
+            Mark.BINGO: 0,
+            Mark.LOTTERY: 0,
+            Mark.ROYAL_FLUSH: 0,
+            Mark.RAIN: 0,
+            Mark.DOWNPOUR: 0,
+            Mark.HURRICANE: 0,
+            Mark.BOMB: 0,
+            Mark.NUKE: 0,
+            Mark.H_BOMB: 0
         }
+
+        superb_terrible_col = []
+        memorable_devastating_col = []
+        legendary_cataclysmic_col = []
+
+        momentum_col = []
         mark_col = []
-        for i in range(len(df)):
-            label = ""
-            # Find which special day
-            if df["legendary"].iloc[i]:
-                if "Legendary" in df["legendary"].iloc[i]:
-                    label = "Legendary"
-                elif "Cataclysmic" in df["legendary"].iloc[i]:
-                    label = "Cataclysmic"
-            elif df["memorable"].iloc[i]:
-                if "Memorable" in df["memorable"].iloc[i]:
-                    label = "Memorable"
-                elif "Devastating" in df["memorable"].iloc[i]:
-                    label = "Devastating"
-            elif df["superb"].iloc[i]:
-                if "Superb" in df["superb"].iloc[i]:
-                    label = "Superb"
-                elif "Terrible" in df["superb"].iloc[i]:
-                    label = "Terrible"
-            momentum = df["momentum"].iloc[i]
-            mark = mark_map.get((label, momentum), "") if label and momentum else ""
-            mark_col.append(mark)
+
+        for _, row in enumerate(df[["diff", "last_30_wins"]].itertuples()):
+            this_special_day, this_momentum, this_mark = self.calculate_special_day(row.diff, row.last_30_wins)
+
+            superb_terrible_col.append("")
+            memorable_devastating_col.append("")
+            legendary_cataclysmic_col.append("")
+            momentum_col.append("")
+            mark_col.append("")
+
+            if this_special_day is None:
+                continue
+            
+            # today was a special day
+            match this_special_day:
+                case SpecialDay.SUPERB | SpecialDay.MEMORABLE | SpecialDay.LEGENDARY:
+                    superb_count += 1
+                    superb_terrible_col[-1] = f"{superb_count}{self._ordinal_suffix(superb_count)} Superb"
+                case SpecialDay.TERRIBLE:
+                    terrible_count += 1
+                    superb_terrible_col[-1] = f"{terrible_count}{self._ordinal_suffix(terrible_count)} Terrible"
+                case SpecialDay.MEMORABLE | SpecialDay.LEGENDARY:
+                    memorable_count += 1
+                    memorable_devastating_col[-1] = \
+                        f"{memorable_count}{self._ordinal_suffix(memorable_count)} Memorable"
+                case SpecialDay.DEVASTATING | SpecialDay.CATACLYSMIC:
+                    devastating_count += 1
+                    memorable_devastating_col[-1] = \
+                        f"{devastating_count}{self._ordinal_suffix(devastating_count)} Devastating"
+                case SpecialDay.LEGENDARY:
+                    legendary_count += 1
+                    legendary_cataclysmic_col[-1] = \
+                        f"{legendary_count}{self._ordinal_suffix(legendary_count)} Legendary"
+                case SpecialDay.CATACLYSMIC:
+                    cataclysmic_count += 1
+                    legendary_cataclysmic_col[-1] = \
+                        f"{cataclysmic_count}{self._ordinal_suffix(cataclysmic_count)} Cataclysmic"
+
+            momentum_col[-1] = this_momentum.value if this_momentum else ""
+
+            if this_mark:
+                mark_counts[this_mark] += 1
+                mark_col[-1] = f"{mark_counts[this_mark]}{self._ordinal_suffix(mark_counts[this_mark])} {this_mark.value}"
+
+
+        df["superb"] = superb_terrible_col
+        df["memorable"] = memorable_devastating_col
+        df["legendary"] = legendary_cataclysmic_col
+        df["momentum"] = momentum_col
         df["mark"] = mark_col
 
         # --- Color settings placeholder ---
