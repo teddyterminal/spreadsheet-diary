@@ -15,12 +15,25 @@ const COLUMN_LABELS = {
     points_lost: "YTD<br>PL",
     total_points: "YTD<br>TOT",
     streak: "STRK",
-    record: "REC?"
+    record: "REC?",
+    superb: "Superb/<br>Terrible",
+    memorable: "Memorable/<br>Devastating",
+    legendary: "Legendary/<br>Cataclysmic",
+    momentum: "Momentum",
+    mark: "Mark"
 };
+
+window.addEventListener('load', () => {
+    const nav = document.querySelector('nav');
+    const navHeight = nav.getBoundingClientRect().height;
+    document.documentElement.style.setProperty('--nav-height', `${navHeight}px`);
+});
+
 
 async function load() {
     const res = await fetch("/data");
     const rows = await res.json();
+    console.log(rows[0]);
     const table = document.getElementById("table");
     table.innerHTML = "";
 
@@ -38,7 +51,16 @@ async function load() {
             // Add coloring class based on column and value
             const value = row[h];
             let cls = null;
-            if (typeof value === 'number' || !isNaN(parseFloat(value))) {
+            let bolding = null;
+            if (['superb', 'memorable', 'legendary'].includes(h) && value) {
+                if (h === 'superb') cls = value.includes("Superb") ? 'good' : 'bad';
+                else if (h === 'memorable') cls = value.includes("Memorable") ? 'good' : 'bad';
+                else if (h === 'legendary') cls = value.includes("Legendary") ? 'good' : 'bad';
+
+                if (h === 'memorable') bolding = 'memorable';
+                else if (h === 'legendary') bolding = 'legendary';
+            }
+            else if (typeof value === 'number' || !isNaN(parseFloat(value))) {
                 const num = parseFloat(value);
                 if (h === 'diff') {
                     if (num >= 5) cls = 'really-good';
@@ -46,18 +68,30 @@ async function load() {
                     else if (num === 0) cls = 'tie';
                     else if (num >= -4) cls = 'bad';
                     else cls = 'really-bad';
+
+                    if (Math.abs(num) >= 20) bolding = 'legendary';
+                    else if (Math.abs(num) >= 10) bolding = 'memorable';
+
                 } else if (h === 'diff_7') {
                     if (num >= 35) cls = 'really-good';
                     else if (num >= 1) cls = 'good';
                     else if (num === 0) cls = 'tie';
                     else if (num >= -34) cls = 'bad';
                     else cls = 'really-bad';
+
+                    if (Math.abs(num) >= 140) bolding = 'legendary';
+                    else if (Math.abs(num) >= 70) bolding = 'memorable';
+
                 } else if (h === 'diff_30') {
                     if (num >= 150) cls = 'really-good';
                     else if (num >= 1) cls = 'good';
                     else if (num === 0) cls = 'tie';
                     else if (num >= -149) cls = 'bad';
                     else cls = 'really-bad';
+
+                    if (Math.abs(num) >= 600) bolding = 'legendary';
+                    else if (Math.abs(num) >= 300) bolding = 'memorable';
+
                 } else if (h === 'diff_365') {
                     if (num > 0) cls = 'good';
                     else if (num < 0) cls = 'bad';
@@ -77,20 +111,21 @@ async function load() {
                 cls = 'really-good';
             }
             if (cls) td.classList.add(cls);
+            if (bolding) td.classList.add(bolding);
 
-            if (h === "diff") {
-                td.classList.add("editable");
-                td.contentEditable = true;
+            // if (h === "diff") {
+            //     td.classList.add("editable");
+            //     td.contentEditable = true;
 
-                td.onblur = async () => {
-                    await fetch("/edit", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ row: i, diff: parseFloat(td.textContent) })
-                    });
-                    load();
-                };
-            }
+            //     td.onblur = async () => {
+            //         await fetch("/edit", {
+            //             method: "POST",
+            //             headers: { "Content-Type": "application/json" },
+            //             body: JSON.stringify({ row: i, diff: parseFloat(td.textContent) })
+            //         });
+            //         load();
+            //     };
+            // }
 
             tr.appendChild(td);
         });

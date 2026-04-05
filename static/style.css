@@ -1,3 +1,79 @@
+:root {
+    --nav-width: 120px;
+    --nav-collapsed-width: 36px;
+}
+
+body {
+    display: flex;
+    min-height: 100vh;
+    margin: 0;
+}
+
+nav {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px 8px;
+    background: #f8f8f8;
+    border-right: 1px solid #ccc;
+    font-family: sans-serif;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    width: var(--nav-width);
+    min-width: var(--nav-width);
+    transition: width 0.2s, min-width 0.2s;
+    overflow: hidden;
+    z-index: 3;
+}
+
+nav.collapsed {
+    width: var(--nav-collapsed-width);
+    min-width: var(--nav-collapsed-width);
+}
+
+nav.collapsed a {
+    opacity: 0;
+    pointer-events: none;
+}
+
+#nav-toggle {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 4px;
+    align-self: flex-start;
+}
+
+nav a {
+    text-decoration: none;
+    color: #333;
+    padding: 4px 12px;
+    border-radius: 4px;
+    white-space: nowrap;
+    transition: opacity 0.2s;
+}
+
+nav a:hover { background: #e0e0e0; }
+
+nav a.active {
+    background: #4be137;
+    color: white;
+    font-weight: bold;
+}
+
+#content {
+    flex: 1;
+    min-width: 0;
+    overflow: auto;
+    height: 100vh;
+}
+
+#table-container {
+    min-width: max-content;
+}
+
 table {
     border-collapse: collapse;
     font-family: sans-serif;
@@ -21,14 +97,17 @@ th {
     z-index: 2;
 }
 
-td.editable {
+/* td.editable {
     cursor: pointer;
 }
 
-td.editable:focus { background: #eaffff; }
+td.editable:focus { background: #eaffff; } */
 
-.good { background: #a0f3a0; }
-.bad { background: #f7afaf; }
-.really-good { background: #75d847; }
-.really-bad { background: #ef7061; }
+.good { background: #afe489; }
+.bad { background: #ff9781; }
+.really-good { background: #4be137; }
+.really-bad { background: #ff4f3b; }
 .tie { background: #75e8f5; }
+
+.memorable { font-weight: bold; }
+.legendary { font-weight: bold; font-style: italic; text-decoration: underline;}

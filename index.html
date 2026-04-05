@@ -8,9 +8,21 @@
 </head>
 
 <body>
-    <button onclick="undo()">Undo</button>
-    <table id="table"></table>
+    <nav id="nav">
+        <button id="nav-toggle">☰</button>
+        <a href="/">Daily</a>
+        <a href="/years">Years</a>
+        <a href="/analysis">Analysis</a>
+    </nav>
 
+    <div id="content">
+        <button onclick="undo()">Undo</button>
+        <div id="table-container">
+            <table id="table"></table>
+        </div>
+    </div>
+
+    <script src="/static/utils.js"></script>
     <script src="/static/app.js"></script>
 
 </body>

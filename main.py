@@ -26,6 +26,7 @@ undo_stack = []
 @app.get("/data")
 def get_data():
     df = service.decorate_df_columns()
+    print(df.columns)
     return df.fillna("").to_dict(orient="records")
 
 class Edit(BaseModel):
