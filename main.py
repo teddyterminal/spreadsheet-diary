@@ -31,6 +31,10 @@ def years_page():
 def months_page():
     return FileResponse("months.html")
 
+@app.get("/epochs")
+def epochs_page():
+    return FileResponse("epochs.html")
+
 @app.get("/analysis")  
 def analysis_page():
     return FileResponse("analysis.html")
@@ -55,6 +59,12 @@ def get_months_data():
     if aggregator.df is None:
         aggregator.df = service.decorate_df_columns()
     return aggregator.produce_monthly_stats()
+
+@app.get("/api/epochs")
+def get_months_data():
+    if aggregator.df is None:
+        aggregator.df = service.decorate_df_columns()
+    return aggregator.produce_epoch_stats()
 
 class Edit(BaseModel):
     row: int

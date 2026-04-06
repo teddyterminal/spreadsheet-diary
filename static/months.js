@@ -40,8 +40,8 @@ async function load() {
     rows.forEach((row, i) => {
         const tr = document.createElement("tr");
 
-        headers.forEach(h => {
-            const td = document.createElement("td");
+        headers.forEach((h, index) => {
+            const td = index === 0 ? document.createElement("th") : document.createElement("td");
             const value = row[h];
             td.textContent = value;
 
@@ -63,6 +63,7 @@ async function load() {
                     cls = "good";
                 }
                 else if (value < 0) cls = "bad";
+                else cls = "tie";
             }
 
             if (["winning_percentage", "point_winning_percentage"].includes(h)) {

@@ -15,7 +15,6 @@ class AggregationService:
         if start_date > end_date:
             raise ValueError("Start date must be on or before end date")
 
-        print(start_date, end_date)
         if start_date.isoformat() == START_DATE.isoformat():
             starting_rating = START_RATING
         else:
@@ -121,5 +120,21 @@ class AggregationService:
             results[-1]["month"] = int(month)
             del results[-1]["start_date"]
             del results[-1]["end_date"]
+        
+        return results
+    
+    def produce_epoch_stats(self) -> list[dict]:
+        df = self.df
+        df["epoch"] = pd.to_datetime(df["date"]).view(int) // 10**16
+        df["prog_date"] = pd.to_datetime(df["date"])
+
+        results = []
+        for epoch, group in df.groupby("epoch"):
+            stats = self.produce_aggregate_stats(
+                start_date=group["prog_date"].min().date(),
+                end_date=group["prog_date"].max().date()
+            )
+            results.append(stats.model_dump())
+            results[-1]["epoch"] = int(epoch)
         
         return results

@@ -1,5 +1,7 @@
 const COLUMN_LABELS = {
-    year: "Year",
+    epoch: "Epoch",
+    start_date: "Start<br>Date",
+    end_date: "End<br>Date",
     starting_rating: "Start<br>Rating",
     ending_rating: "End<br>Rating",
     average_rating: "Avg.<br>Rating",
@@ -27,7 +29,7 @@ const COLUMN_LABELS = {
 };
 
 async function load() {
-    const res = await fetch("/api/years");
+    const res = await fetch("/api/epochs");
     const rows = await res.json();
     console.log(rows[0]);
     const table = document.getElementById("table");
