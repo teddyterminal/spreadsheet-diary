@@ -78,9 +78,11 @@ class RatingsService:
         df["diff_365"] = df["rating"] - df["rating"].shift(365)
 
         df["avg_year_upto"] = df["rating"].shift(1).rolling(365, min_periods=1).mean()
+        diff_365_filled = df["diff_365"].fillna(0)
+        avg_year_upto_filled = df["avg_year_upto"].fillna(0)
 
         df["entropy"] = abs(df["diff"]) / (4.5 + (
-            df["rating"].shift(1) + df["diff_365"] - df["avg_year_upto"]) / 200)
+            df["rating"].shift(1) + diff_365_filled - avg_year_upto_filled) / 200)
         df["avg_entropy"] = df["entropy"].rolling(90, min_periods=1).mean()
 
         # Wins / 30

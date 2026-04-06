@@ -1,7 +1,7 @@
 import pandas as pd
 import datetime as dt
 
-from services.utils import START_DATE, NOTIONAL_MULTIPLIER, TimePeriodStatistics
+from services.utils import START_DATE, NOTIONAL_MULTIPLIER, START_RATING, TimePeriodStatistics
 
 
 class AggregationService:
@@ -14,31 +14,37 @@ class AggregationService:
             raise ValueError(f"Dates must be on or after {START_DATE.isoformat()}")
         if start_date > end_date:
             raise ValueError("Start date must be on or before end date")
-                
-        starting_rating = self.df.loc[self.df["date"] == max(start_date - dt.timedelta(days=1), START_DATE), "rating"].iloc[0]
+
+        print(start_date, end_date)
+        if start_date.isoformat() == START_DATE.isoformat():
+            starting_rating = START_RATING
+        else:
+            starting_rating = self.df.loc[
+                pd.to_datetime(self.df["date"]) == pd.to_datetime(start_date), "rating"].iloc[0]
 
         # Filter the DataFrame to the specified date range
-        mask = (self.df["date"] >= pd.to_datetime(start_date)) & (self.df["date"] <= pd.to_datetime(end_date))
+        mask = (pd.to_datetime(self.df["date"])>= pd.to_datetime(start_date)) & \
+            (pd.to_datetime(self.df["date"]) <= pd.to_datetime(end_date))
         range_df = self.df.loc[mask].copy()
 
+        print(range_df)
         average_rating = range_df["rating"].mean()
         average_entropy = range_df["entropy"].mean()
 
-        wins = range_df["diff"].transform(lambda x: (x > 0).sum())
-        losses = range_df["diff"].transform(lambda x: (x < 0).sum())
-        ties = range_df["diff"].transform(lambda x: (x == 0).sum())
+        wins = (range_df["diff"] > 0).sum()
+        losses = (range_df["diff"] < 0).sum()
+        ties = (range_df["diff"] == 0).sum()
         days = wins + losses + ties
         winning_percentage = (wins + ties/2) / days if days > 0 else 0
 
-        points_won = range_df["diff"].transform(lambda x: x.clip(lower=0).sum())
-        points_lost = abs(range_df["diff"].transform(lambda x: x.clip(upper=0).sum()))
-        total_diff = points_won - points_lost
-        points_per_day = total_diff / days if days > 0 else 0
-        point_winning_percentage = points_won / total_diff if total_diff > 0 else 0
-
+        points_won = range_df["diff"].clip(lower=0).sum()
+        points_lost = abs(range_df["diff"].clip(upper=0).sum())
         total_points_awarded = points_won + points_lost
+        points_per_day = total_points_awarded / days if days > 0 else 0
+        point_winning_percentage = points_won / total_points_awarded if total_points_awarded > 0 else 0
 
-        streak_flips = range_df["streak"].transform(lambda x: (x == 1).sum())
+
+        streak_flips = (range_df["streak"] == 1).sum()
 
         value_per_win = points_won / wins if wins > 0 else 0
         value_per_loss = points_lost / losses if losses > 0 else 0
@@ -49,11 +55,12 @@ class AggregationService:
             (points_won + points_lost * NOTIONAL_MULTIPLIER) * losses / \
             (wins + losses * NOTIONAL_MULTIPLIER) if (wins + losses) > 0 else 0
 
+        total_diff = points_won - points_lost
         ending_rating = starting_rating + total_diff
 
         x_factor = total_diff - notional_diff
 
-        return TimePeriodStatistics(
+        out = TimePeriodStatistics(
             start_date=start_date.isoformat(),
             end_date=end_date.isoformat(),
             starting_rating=starting_rating,
@@ -75,4 +82,23 @@ class AggregationService:
             notional_diff=notional_diff,
             x_factor=x_factor,
             total_diff=total_diff
-        ).model_dump_json()
+        )
+
+        print(out)
+        return out
+
+
+    def produce_yearly_stats(self) -> list[dict]:
+        df = self.df.copy()
+        df["year"] = pd.to_datetime(df["date"]).dt.year
+        df["prog_date"] = pd.to_datetime(df["date"])
+
+        results = []
+        for year, group in df.groupby("year"):
+            stats = self.produce_aggregate_stats(
+                start_date=group["prog_date"].min().date(),
+                end_date=group["prog_date"].max().date()
+            )
+            results.append(stats.model_dump())
+        
+        return results

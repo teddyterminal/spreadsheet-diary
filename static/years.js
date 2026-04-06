@@ -1,30 +1,13 @@
 const COLUMN_LABELS = {
-    date: "Date",
-    rating: "Rating",
-    diff: "+/-",
-    diff_7: "WD",
-    diff_30: "MD",
-    diff_365: "YD",
-    entropy: "ENT",
-    avg_entropy: "ENT90",
-    last_30_wins: "L30W",
-    wins: "YTD<br>W",
-    losses: "YTD<br>L",
-    ties: "YTD<br>T",
-    points_won: "YTD<br>PW",
-    points_lost: "YTD<br>PL",
-    total_points: "YTD<br>TOT",
-    streak: "STRK",
-    record: "REC?",
-    superb: "Superb/<br>Terrible",
-    memorable: "Memorable/<br>Devastating",
-    legendary: "Legendary/<br>Cataclysmic",
-    momentum: "Momentum",
-    mark: "Mark"
+    start_date: "Start<br>Date",
+    end_date: "End<br>Date",
+    start_rating: "Start<br>Rating",
+    end_rating: "End<br>Rating",
+    total: "+/-"
 };
 
 async function load() {
-    const res = await fetch("/api/data");
+    const res = await fetch("/api/years");
     const rows = await res.json();
     console.log(rows[0]);
     const table = document.getElementById("table");
