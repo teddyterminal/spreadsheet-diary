@@ -1,35 +1,7 @@
 import pandas as pd
 import datetime as dt
-from pydantic import BaseModel
 
-from services.utils import START_DATE, NOTIONAL_MULTIPLIER
-
-class TimePeriodStatistics(BaseModel):
-    start_date: dt.date
-    end_date: dt.date
-    starting_rating: float
-    ending_rating: float
-
-    average_rating: float
-    average_entropy: float
-
-    wins: int
-    losses: int
-    ties: int
-    streak_flips: int
-    winning_percentage: float
-
-    points_won: float
-    points_lost: float
-    total_points_awarded: float
-    points_per_day: float
-    point_winning_percentage: float
-
-    value_per_win: float
-    value_per_loss: float
-    notional_diff: float
-    x_factor: float
-    total_diff: float
+from services.utils import START_DATE, NOTIONAL_MULTIPLIER, TimePeriodStatistics
 
 
 class AggregationService:

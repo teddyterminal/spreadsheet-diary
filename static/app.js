@@ -23,13 +23,6 @@ const COLUMN_LABELS = {
     mark: "Mark"
 };
 
-window.addEventListener('load', () => {
-    const nav = document.querySelector('nav');
-    const navHeight = nav.getBoundingClientRect().height;
-    document.documentElement.style.setProperty('--nav-height', `${navHeight}px`);
-});
-
-
 async function load() {
     const res = await fetch("/data");
     const rows = await res.json();
