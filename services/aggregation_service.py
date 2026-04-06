@@ -48,6 +48,7 @@ class AggregationService:
 
         value_per_win = points_won / wins if wins > 0 else 0
         value_per_loss = points_lost / losses if losses > 0 else 0
+        value_diff = value_per_win - value_per_loss
 
         notional_diff = \
             (points_won * NOTIONAL_MULTIPLIER + points_lost) * wins / \
@@ -60,13 +61,14 @@ class AggregationService:
 
         x_factor = total_diff - notional_diff
 
-        out = TimePeriodStatistics(
+        return TimePeriodStatistics(
             start_date=start_date.isoformat(),
             end_date=end_date.isoformat(),
             starting_rating=starting_rating,
             ending_rating=ending_rating,
             average_rating=average_rating,
             average_entropy=average_entropy,
+            days=days,
             wins=wins,
             losses=losses,
             ties=ties,
@@ -79,13 +81,11 @@ class AggregationService:
             point_winning_percentage=point_winning_percentage,
             value_per_win=value_per_win,
             value_per_loss=value_per_loss,
+            value_diff=value_diff,
             notional_diff=notional_diff,
             x_factor=x_factor,
             total_diff=total_diff
         )
-
-        print(out)
-        return out
 
 
     def produce_yearly_stats(self) -> list[dict]:
@@ -100,5 +100,8 @@ class AggregationService:
                 end_date=group["prog_date"].max().date()
             )
             results.append(stats.model_dump())
+            results[-1]["year"] = year
+            del results[-1]["start_date"]
+            del results[-1]["end_date"]
         
         return results

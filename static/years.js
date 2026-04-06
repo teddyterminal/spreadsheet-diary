@@ -1,9 +1,29 @@
 const COLUMN_LABELS = {
-    start_date: "Start<br>Date",
-    end_date: "End<br>Date",
-    start_rating: "Start<br>Rating",
-    end_rating: "End<br>Rating",
-    total: "+/-"
+    year: "Year",
+    starting_rating: "Start<br>Rating",
+    ending_rating: "End<br>Rating",
+    average_rating: "Avg.<br>Rating",
+    average_entropy: "Avg.<br>Entropy",
+    streak_flips: "FLP",
+
+    days: "Days",
+    wins: "W",
+    losses: "L",
+    ties: "T",
+    winning_percentage: "PCT",
+
+    points_won: "PW",
+    points_lost: "PL",
+    total_points_awarded: "PT",
+    points_per_day: "PPD",
+    point_winning_percentage: "PPCT",
+
+    value_per_win: "VPW",
+    value_per_loss: "VPL",
+    value_diff: "VD",
+    notional_diff: "ND",
+    x_factor: "XF",
+    total_diff: "+/-"
 };
 
 async function load() {
@@ -13,7 +33,7 @@ async function load() {
     const table = document.getElementById("table");
     table.innerHTML = "";
 
-    const headers = Object.keys(rows[0]);
+    const headers = Object.keys(COLUMN_LABELS);
     table.insertAdjacentHTML("beforeend",
         "<tr>" + headers.map(h => `<th>${COLUMN_LABELS[h]}</th>`).join("") + "</tr>");
 
@@ -22,86 +42,36 @@ async function load() {
 
         headers.forEach(h => {
             const td = document.createElement("td");
-            td.textContent = row[h];
+            const value = row[h];
+            td.textContent = value;
 
             // Add coloring class based on column and value
-            const value = row[h];
             let cls = null;
             let bolding = null;
-            if (['superb', 'memorable', 'legendary'].includes(h) && value) {
-                if (h === 'superb') cls = value.includes("Superb") ? 'good' : 'bad';
-                else if (h === 'memorable') cls = value.includes("Memorable") ? 'good' : 'bad';
-                else if (h === 'legendary') cls = value.includes("Legendary") ? 'good' : 'bad';
 
-                if (h === 'memorable') bolding = 'memorable';
-                else if (h === 'legendary') bolding = 'legendary';
-            }
-            else if (typeof value === 'number' || !isNaN(parseFloat(value))) {
-                const num = parseFloat(value);
-                if (h === 'diff') {
-                    if (num >= 5) cls = 'really-good';
-                    else if (num >= 1) cls = 'good';
-                    else if (num === 0) cls = 'tie';
-                    else if (num >= -4) cls = 'bad';
-                    else cls = 'really-bad';
+            if (["average_rating", "notional_diff", "points_per_day"].includes(h)) td.textContent = value.toFixed(2);
+            if (["average_entropy", "winning_percentage", "point_winning_percentage",
+                "value_per_win", "value_per_loss", "value_diff"].includes(h)) td.textContent = value.toFixed(3);
+            if (h === "x_factor") td.textContent = value.toFixed(1);
+            
+            if (["wins", "losses", "total_diff"].includes(h)) bolding = "memorable";
 
-                    if (Math.abs(num) >= 20) bolding = 'legendary';
-                    else if (Math.abs(num) >= 10) bolding = 'memorable';
-
-                } else if (h === 'diff_7') {
-                    if (num >= 35) cls = 'really-good';
-                    else if (num >= 1) cls = 'good';
-                    else if (num === 0) cls = 'tie';
-                    else if (num >= -34) cls = 'bad';
-                    else cls = 'really-bad';
-
-                    if (Math.abs(num) >= 140) bolding = 'legendary';
-                    else if (Math.abs(num) >= 70) bolding = 'memorable';
-
-                } else if (h === 'diff_30') {
-                    if (num >= 150) cls = 'really-good';
-                    else if (num >= 1) cls = 'good';
-                    else if (num === 0) cls = 'tie';
-                    else if (num >= -149) cls = 'bad';
-                    else cls = 'really-bad';
-
-                    if (Math.abs(num) >= 600) bolding = 'legendary';
-                    else if (Math.abs(num) >= 300) bolding = 'memorable';
-
-                } else if (h === 'diff_365') {
-                    if (num > 0) cls = 'good';
-                    else if (num < 0) cls = 'bad';
-                    else cls = 'tie';
-                } else if (h === 'entropy' || h === 'avg_entropy') {
-                    cls = num < 0.5 ? 'good' : 'bad';
-                } else if (h === 'last_30_wins') {
-                    if (num >= 20) cls = 'really-good';
-                    else if (num <= 10) cls = 'really-bad';
-                    else if (num > 15) cls = 'good';
-                    else if (num === 15) cls = 'tie';
-                    else cls = 'bad';
-                } else if (h === "streak" && num >= 10) {
-                    cls = 'tie';
+            if (["value_diff", "notional_diff", "x_factor", "total_diff"].includes(h)) {
+                if (value > 0) {
+                    td.textContent = "+" + td.textContent;
+                    cls = "good";
                 }
-            } else if (h === 'record' && value === "✓") {
-                cls = 'really-good';
+                else if (value < 0) cls = "bad";
             }
+
+            if (["winning_percentage", "point_winning_percentage"].includes(h)) {
+                if (value > 0.5) cls = "winning_pct";
+                else if (value < 0.5) cls = "bad";
+                else cls = "tied_pct";
+            }
+
             if (cls) td.classList.add(cls);
             if (bolding) td.classList.add(bolding);
-
-            // if (h === "diff") {
-            //     td.classList.add("editable");
-            //     td.contentEditable = true;
-
-            //     td.onblur = async () => {
-            //         await fetch("/edit", {
-            //             method: "POST",
-            //             headers: { "Content-Type": "application/json" },
-            //             body: JSON.stringify({ row: i, diff: parseFloat(td.textContent) })
-            //         });
-            //         load();
-            //     };
-            // }
 
             tr.appendChild(td);
         });

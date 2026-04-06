@@ -64,6 +64,7 @@ class TimePeriodStatistics(BaseModel):
     average_rating: float
     average_entropy: float
 
+    days: int
     wins: int
     losses: int
     ties: int
@@ -78,6 +79,7 @@ class TimePeriodStatistics(BaseModel):
 
     value_per_win: float
     value_per_loss: float
+    value_diff: float
     notional_diff: float
     x_factor: float
     total_diff: float

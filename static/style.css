@@ -109,5 +109,8 @@ td.editable:focus { background: #eaffff; } */
 .really-bad { background: #ff4f3b; }
 .tie { background: #75e8f5; }
 
+.winning_pct { background: #88ccff; }
+.tied_pct { background: #fffc98; }
+
 .memorable { font-weight: bold; }
 .legendary { font-weight: bold; font-style: italic; text-decoration: underline;}
