@@ -1,10 +1,7 @@
 from enum import Enum
 import pandas as pd
-from services.utils import SpecialDay, Momentum, Mark, mark_mapping, \
+from services.utils import START_RATING, SpecialDay, Momentum, Mark, mark_mapping, \
     SUPERB_TERRIBLE_THRESHOLD, MEMORABLE_DEVASTATING_THRESHOLD, LEGENDARY_CATACLYSMIC_THRESHOLD
-
-START_RATING = 245
-
 class RatingsService:
 
 
@@ -82,7 +79,6 @@ class RatingsService:
 
         df["avg_year_upto"] = df["rating"].shift(1).rolling(365, min_periods=1).mean()
 
-        # Placeholder entropy functions
         df["entropy"] = abs(df["diff"]) / (4.5 + (
             df["rating"].shift(1) + df["diff_365"] - df["avg_year_upto"]) / 200)
         df["avg_entropy"] = df["entropy"].rolling(90, min_periods=1).mean()
@@ -124,6 +120,7 @@ class RatingsService:
         df["record"] = df["rating"] == df["rating"].cummax()
         df["record"] = df["record"].apply(lambda x: "✓" if x else "")
 
+        # Special Days
         superb_count = 0
         terrible_count = 0
         memorable_count = 0
@@ -202,9 +199,6 @@ class RatingsService:
         df["legendary"] = legendary_cataclysmic_col
         df["momentum"] = momentum_col
         df["mark"] = mark_col
-
-        # --- Color settings placeholder ---
-        # You can set colors for these new columns in your frontend CSS as needed.
 
         df["date"] = df["date"].dt.strftime("%Y-%m-%d")
         df["entropy"] = df["entropy"].round(3)

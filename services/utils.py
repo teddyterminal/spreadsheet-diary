@@ -1,4 +1,10 @@
 from enum import Enum
+import datetime as dt
+
+START_RATING = 245
+START_DATE = dt.fromisoformat("2010-01-01").date()
+
+NOTIONAL_MULTIPLIER = 2
 
 SUPERB_TERRIBLE_THRESHOLD = 5
 MEMORABLE_DEVASTATING_THRESHOLD = 10
