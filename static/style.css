@@ -97,6 +97,18 @@ th {
     z-index: 2;
 }
 
+td:first-child, th:first-child {
+    position: sticky;
+    left: 0;
+    background: #f8f8f8;
+    z-index: 1;
+}
+
+th:first-child {
+    z-index: 3;
+}
+
+
 /* td.editable {
     cursor: pointer;
 }

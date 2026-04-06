@@ -6,8 +6,8 @@ import pandas as pd
 
 from services.ratings_service import RatingsService
 from services.aggregation_service import AggregationService
+from services.utils import START_RATING
 
-START_RATING = 245
 CSV_PATH = "ratings.csv"
 
 service = RatingsService(CSV_PATH)
@@ -27,6 +27,10 @@ def root():
 def years_page():
     return FileResponse("years.html")
 
+@app.get("/months")
+def months_page():
+    return FileResponse("months.html")
+
 @app.get("/analysis")  
 def analysis_page():
     return FileResponse("analysis.html")
@@ -45,6 +49,12 @@ def get_years_data():
     if aggregator.df is None:
         aggregator.df = service.decorate_df_columns()
     return aggregator.produce_yearly_stats()
+
+@app.get("/api/months")
+def get_months_data():
+    if aggregator.df is None:
+        aggregator.df = service.decorate_df_columns()
+    return aggregator.produce_monthly_stats()
 
 class Edit(BaseModel):
     row: int

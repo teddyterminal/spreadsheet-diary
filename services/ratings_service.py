@@ -2,8 +2,9 @@ from enum import Enum
 import pandas as pd
 from services.utils import START_RATING, SpecialDay, Momentum, Mark, mark_mapping, \
     SUPERB_TERRIBLE_THRESHOLD, MEMORABLE_DEVASTATING_THRESHOLD, LEGENDARY_CATACLYSMIC_THRESHOLD
-class RatingsService:
 
+
+class RatingsService:
 
     def __init__(self, csv_path: str):
         self.csv_path = csv_path

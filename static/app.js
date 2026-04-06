@@ -37,8 +37,8 @@ async function load() {
     rows.forEach((row, i) => {
         const tr = document.createElement("tr");
 
-        headers.forEach(h => {
-            const td = document.createElement("td");
+        headers.forEach((h, index) => {
+            const td = index === 0 ? document.createElement("th") : document.createElement("td");
             td.textContent = row[h];
 
             // Add coloring class based on column and value

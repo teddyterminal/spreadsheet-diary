@@ -1,5 +1,5 @@
 const COLUMN_LABELS = {
-    year: "Year",
+    month: "Month",
     starting_rating: "Start<br>Rating",
     ending_rating: "End<br>Rating",
     average_rating: "Avg.<br>Rating",
@@ -27,7 +27,7 @@ const COLUMN_LABELS = {
 };
 
 async function load() {
-    const res = await fetch("/api/years");
+    const res = await fetch("/api/months");
     const rows = await res.json();
     console.log(rows[0]);
     const table = document.getElementById("table");
@@ -40,8 +40,8 @@ async function load() {
     rows.forEach((row, i) => {
         const tr = document.createElement("tr");
 
-        headers.forEach((h, index) => {
-            const td = index === 0 ? document.createElement("th") : document.createElement("td");
+        headers.forEach(h => {
+            const td = document.createElement("td");
             const value = row[h];
             td.textContent = value;
 
@@ -49,6 +49,7 @@ async function load() {
             let cls = null;
             let bolding = null;
 
+            if (h === "month" && value === 1) td.textContent += "/" + row["year"];
             if (["average_rating", "notional_diff", "points_per_day"].includes(h)) td.textContent = value.toFixed(2);
             if (["average_entropy", "winning_percentage", "point_winning_percentage",
                 "value_per_win", "value_per_loss", "value_diff"].includes(h)) td.textContent = value.toFixed(3);

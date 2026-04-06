@@ -27,7 +27,6 @@ class AggregationService:
             (pd.to_datetime(self.df["date"]) <= pd.to_datetime(end_date))
         range_df = self.df.loc[mask].copy()
 
-        print(range_df)
         average_rating = range_df["rating"].mean()
         average_entropy = range_df["entropy"].mean()
 
@@ -87,7 +86,6 @@ class AggregationService:
             total_diff=total_diff
         )
 
-
     def produce_yearly_stats(self) -> list[dict]:
         df = self.df.copy()
         df["year"] = pd.to_datetime(df["date"]).dt.year
@@ -101,6 +99,26 @@ class AggregationService:
             )
             results.append(stats.model_dump())
             results[-1]["year"] = year
+            del results[-1]["start_date"]
+            del results[-1]["end_date"]
+        
+        return results
+
+    def produce_monthly_stats(self) -> list[dict]:
+        df = self.df.copy()
+        df["year"] = pd.to_datetime(df["date"]).dt.year
+        df["month"] = pd.to_datetime(df["date"]).dt.month
+        df["prog_date"] = pd.to_datetime(df["date"])
+
+        results = []
+        for (year, month), group in df.groupby(["year", "month"]):
+            stats = self.produce_aggregate_stats(
+                start_date=group["prog_date"].min().date(),
+                end_date=group["prog_date"].max().date()
+            )
+            results.append(stats.model_dump())
+            results[-1]["year"] = int(year)
+            results[-1]["month"] = int(month)
             del results[-1]["start_date"]
             del results[-1]["end_date"]
         
